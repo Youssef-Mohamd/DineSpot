@@ -1,6 +1,7 @@
 package com.restaurant.reservation.service;
 
 import com.restaurant.reservation.dto.request.CreateTimeSlotRequest;
+import com.restaurant.reservation.dto.request.UpdateTimeSlotRequest;
 import com.restaurant.reservation.dto.response.TimeSlotResponse;
 import com.restaurant.reservation.entity.*;
 import com.restaurant.reservation.repository.*;
@@ -67,12 +68,55 @@ public class TimeSlotService {
         return mapToResponse(saved);
     }
 
-    //  GET
+    //  GET (active only — used by public availability)
     public List<TimeSlotResponse> getByRestaurant(Long restaurantId) {
         return timeSlotRepository.findByRestaurantIdAndIsActiveTrue(restaurantId)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    // GET all slots including inactive (admin)
+    public List<TimeSlotResponse> getAllByRestaurant(Long restaurantId) {
+        return timeSlotRepository.findByRestaurantId(restaurantId)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public TimeSlotResponse update(Long restaurantId, Long slotId, UpdateTimeSlotRequest req) {
+        TimeSlot slot = timeSlotRepository.findById(slotId)
+                .orElseThrow(() -> new RuntimeException("Time slot not found"));
+
+        if (!slot.getRestaurant().getId().equals(restaurantId)) {
+            throw new RuntimeException("Time slot does not belong to this restaurant");
+        }
+
+        if (req.getSlotTime() != null && !req.getSlotTime().isBlank()) {
+            try {
+                slot.setSlotTime(LocalTime.parse(req.getSlotTime()));
+            } catch (DateTimeParseException e) {
+                throw new RuntimeException("Invalid time format. Use HH:mm (e.g., 18:30)");
+            }
+        }
+
+        if (req.getDayOfWeek() != null) {
+            if (req.getDayOfWeek().isBlank()) {
+                slot.setDayOfWeek(null);
+            } else {
+                try {
+                    slot.setDayOfWeek(DayOfWeek.valueOf(req.getDayOfWeek().toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new RuntimeException("Invalid dayOfWeek value");
+                }
+            }
+        }
+
+        if (req.getIsActive() != null) {
+            slot.setIsActive(req.getIsActive());
+        }
+
+        return mapToResponse(timeSlotRepository.save(slot));
     }
 
     // === MAPPER ===
@@ -85,9 +129,14 @@ public class TimeSlotService {
                 .build();
     }
 
-    public void delete(Long slotId) {
+    public void delete(Long restaurantId, Long slotId) {
         TimeSlot slot = timeSlotRepository.findById(slotId)
                 .orElseThrow(() -> new RuntimeException("Time slot not found"));
+
+        if (!slot.getRestaurant().getId().equals(restaurantId)) {
+            throw new RuntimeException("Time slot does not belong to this restaurant");
+        }
+
         timeSlotRepository.delete(slot);
     }
 }
