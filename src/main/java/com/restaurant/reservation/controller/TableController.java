@@ -1,6 +1,7 @@
 package com.restaurant.reservation.controller;
 
 import com.restaurant.reservation.dto.request.CreateTableRequest;
+import com.restaurant.reservation.dto.request.UpdateTableRequest;
 import com.restaurant.reservation.dto.response.TableResponse;
 import com.restaurant.reservation.service.TableService;
 import jakarta.validation.Valid;
@@ -29,11 +30,19 @@ public class TableController {
         return ResponseEntity.ok(tableService.getByRestaurant(restaurantId));
     }
 
+    @PutMapping("/{tableId}")
+    public ResponseEntity<TableResponse> update(
+            @PathVariable Long restaurantId,
+            @PathVariable Long tableId,
+            @Valid @RequestBody UpdateTableRequest req) {
+        return ResponseEntity.ok(tableService.update(restaurantId, tableId, req));
+    }
+
     @DeleteMapping("/{tableId}")
     public ResponseEntity<Void> delete(
             @PathVariable Long restaurantId,
             @PathVariable Long tableId) {
-        tableService.delete(tableId);
+        tableService.delete(restaurantId, tableId);
         return ResponseEntity.noContent().build();
     }
 }

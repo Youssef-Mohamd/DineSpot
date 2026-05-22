@@ -1,6 +1,7 @@
 package com.restaurant.reservation.service;
 
 import com.restaurant.reservation.dto.request.CreateTableRequest;
+import com.restaurant.reservation.dto.request.UpdateTableRequest;
 import com.restaurant.reservation.dto.response.TableResponse;
 import com.restaurant.reservation.entity.*;
 import com.restaurant.reservation.repository.*;
@@ -12,7 +13,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class TableService {
-
 
     private final RestaurantTableRepository tableRepository;
 
@@ -65,7 +65,38 @@ public class TableService {
                 .build();
     }
 
-    public void delete(Long tableId) {
-        tableRepository.deleteById(tableId);
+    public TableResponse update(Long restaurantId, Long tableId, UpdateTableRequest req) {
+        RestaurantTable table = tableRepository.findById(tableId)
+                .orElseThrow(() -> new RuntimeException("Table not found"));
+
+        if (!table.getRestaurant().getId().equals(restaurantId)) {
+            throw new RuntimeException("Table does not belong to this restaurant");
+        }
+
+        if (req.getTableNumber() != null) {
+            table.setTableNumber(req.getTableNumber());
+        }
+        if (req.getCapacity() != null) {
+            table.setCapacity(req.getCapacity());
+        }
+        if (req.getLocation() != null && !req.getLocation().isBlank()) {
+            table.setLocation(Location.valueOf(req.getLocation().toUpperCase()));
+        }
+        if (req.getIsAvailable() != null) {
+            table.setIsAvailable(req.getIsAvailable());
+        }
+
+        return mapToResponse(tableRepository.save(table));
+    }
+
+    public void delete(Long restaurantId, Long tableId) {
+        RestaurantTable table = tableRepository.findById(tableId)
+                .orElseThrow(() -> new RuntimeException("Table not found"));
+
+        if (!table.getRestaurant().getId().equals(restaurantId)) {
+            throw new RuntimeException("Table does not belong to this restaurant");
+        }
+
+        tableRepository.delete(table);
     }
 }

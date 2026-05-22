@@ -1,6 +1,7 @@
 package com.restaurant.reservation.service;
 
 import com.restaurant.reservation.dto.request.AvailabilityRequest;
+import com.restaurant.reservation.dto.response.AvailableSlotResponse;
 import com.restaurant.reservation.entity.*;
 import com.restaurant.reservation.repository.*;
 import com.restaurant.reservation.strategyPattern.TableAssignmentStrategy;
@@ -20,7 +21,7 @@ public class AvailabilityService {
     private final TableAssignmentStrategy strategy;
 
     // =========== MAIN METHOD ===========
-    public List<String> getAvailableSlots(AvailabilityRequest request) {
+    public List<AvailableSlotResponse> getAvailableSlots(AvailabilityRequest request) {
 
         List<TimeSlot> slots =
                 timeSlotRepository.findByRestaurantIdAndIsActiveTrue(
@@ -34,7 +35,10 @@ public class AvailabilityService {
                         slot.getId(),
                         request.getGuests()
                 ))
-                .map(slot -> slot.getSlotTime().toString())
+                .map(slot -> AvailableSlotResponse.builder()
+                        .id(slot.getId())
+                        .slotTime(slot.getSlotTime().toString())
+                        .build())
                 .collect(Collectors.toList());
     }
 
