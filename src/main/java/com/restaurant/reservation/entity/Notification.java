@@ -19,6 +19,12 @@ public class Notification {
     @Column(nullable = false)
     private String message;
 
+    @Column
+    private String title;
+
+    @Column
+    private String actionUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private NotificationType type;

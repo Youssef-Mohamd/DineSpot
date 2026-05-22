@@ -13,7 +13,7 @@ public class ReservationEventListener {
 
     @EventListener
     public void handleReservationEvent(ReservationEvent event) {
-        if (event.getType().equals("CREATED")) {
+        if (event.getType().equals("CONFIRMED")) {
             notificationService.sendBookingConfirmation(event.getReservation());
         } else if (event.getType().equals("CANCELLED")) {
             notificationService.sendCancellationNotice(event.getReservation());

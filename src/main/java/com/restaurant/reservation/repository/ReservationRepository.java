@@ -18,5 +18,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             LocalDate date,
             Long timeSlotId,
             ReservationStatus status
-    );
+    );  // prevent double booking
+       // statusNot = Canceled
 }

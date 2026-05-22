@@ -119,6 +119,9 @@ public class ReservationService {
 
         Reservation saved = reservationRepository.save(reservation);
 
+        // Publish confirmation event (Observer Pattern)
+        eventPublisher.publishEvent(new ReservationEvent(this, saved, "CONFIRMED"));
+
         return mapToResponse(saved);
     }
 
