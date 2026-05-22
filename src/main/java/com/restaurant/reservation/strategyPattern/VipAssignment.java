@@ -10,7 +10,7 @@ import java.util.List;
 public class VipAssignment implements TableAssignmentStrategy {
 
     @Override
-    public RestaurantTable assign(List<RestaurantTable> tables, int guests) {
+    public RestaurantTable assignTable(List<RestaurantTable> tables, int guests) {
 
         return tables.stream()
                 .filter(t -> t.getCapacity() >= guests)

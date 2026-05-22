@@ -12,6 +12,7 @@ import java.util.List;
 public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
     List<TimeSlot> findByRestaurantId(Long restaurantId);
     List<TimeSlot> findByRestaurantIdAndIsActiveTrue(Long restaurantId);
+    List<TimeSlot> findByRestaurantIdAndDayOfWeekAndIsActiveTrue(Long restaurantId, DayOfWeek dayOfWeek);
 
     //  Prevent duplicate (same time + same day + same restaurant)
     boolean existsByRestaurantIdAndSlotTimeAndDayOfWeek(

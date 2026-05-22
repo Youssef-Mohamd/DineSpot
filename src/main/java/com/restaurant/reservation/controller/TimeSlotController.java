@@ -15,13 +15,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/restaurants/{restaurantId}/slots")
 @RequiredArgsConstructor
 public class TimeSlotController {
 
     private final TimeSlotService timeSlotService;
 
-    @PostMapping
+    @PostMapping("/api/restaurants/{restaurantId}/slots")
     public ResponseEntity<TimeSlotResponse> create(
             @PathVariable Long restaurantId,
             @Valid @RequestBody CreateTimeSlotRequest req) {
@@ -29,20 +28,20 @@ public class TimeSlotController {
                 .body(timeSlotService.create(restaurantId, req));
     }
 
-    @GetMapping
+    @GetMapping("/api/restaurants/{restaurantId}/slots")
     public ResponseEntity<List<TimeSlotResponse>> getAll(@PathVariable Long restaurantId) {
         return ResponseEntity.ok(timeSlotService.getByRestaurant(restaurantId));
     }
 
     /** All slots including inactive — requires ADMIN (used by admin dashboard). */
-    @GetMapping("/all")
+    @GetMapping("/api/restaurants/{restaurantId}/slots/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<TimeSlotResponse>> getAllIncludingInactive(
             @PathVariable Long restaurantId) {
         return ResponseEntity.ok(timeSlotService.getAllByRestaurant(restaurantId));
     }
 
-    @PutMapping("/{slotId}")
+    @PutMapping("/api/restaurants/{restaurantId}/slots/{slotId}")
     public ResponseEntity<TimeSlotResponse> update(
             @PathVariable Long restaurantId,
             @PathVariable Long slotId,
@@ -50,11 +49,18 @@ public class TimeSlotController {
         return ResponseEntity.ok(timeSlotService.update(restaurantId, slotId, req));
     }
 
-    @DeleteMapping("/{slotId}")
+    @DeleteMapping("/api/restaurants/{restaurantId}/slots/{slotId}")
     public ResponseEntity<Void> delete(
             @PathVariable Long restaurantId,
             @PathVariable Long slotId) {
         timeSlotService.delete(restaurantId, slotId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/api/timeslots/available")
+    public ResponseEntity<List<TimeSlotResponse>> getAvailableSlots(
+            @RequestParam Long restaurantId,
+            @RequestParam String date) {
+        return ResponseEntity.ok(timeSlotService.getAvailableSlots(restaurantId, date));
     }
 }

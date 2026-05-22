@@ -76,6 +76,18 @@ public class TimeSlotService {
                 .collect(Collectors.toList());
     }
 
+    // GET available slots for a specific date (based on day of week template)
+    public List<TimeSlotResponse> getAvailableSlots(Long restaurantId, String dateStr) {
+        java.time.LocalDate date = java.time.LocalDate.parse(dateStr);
+        com.restaurant.reservation.entity.DayOfWeek dayOfWeek = 
+            com.restaurant.reservation.entity.DayOfWeek.valueOf(date.getDayOfWeek().name());
+            
+        return timeSlotRepository.findByRestaurantIdAndDayOfWeekAndIsActiveTrue(restaurantId, dayOfWeek)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     // GET all slots including inactive (admin)
     public List<TimeSlotResponse> getAllByRestaurant(Long restaurantId) {
         return timeSlotRepository.findByRestaurantId(restaurantId)

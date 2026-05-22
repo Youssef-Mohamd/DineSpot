@@ -24,6 +24,6 @@ public class TableAssignmentService {
             throw new RuntimeException("Invalid strategy type: " + type);
         }
 
-        return strategy.assign(tables, guestCount);
+        return strategy.assignTable(tables, guestCount);
     }
 }
