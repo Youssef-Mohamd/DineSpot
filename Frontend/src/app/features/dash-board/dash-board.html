@@ -1,0 +1,682 @@
+<section class="min-h-screen bg-[#FFF7ED] py-12">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-gray-900">Management</h1>
+      <p class="text-gray-500 mt-2">
+        Add restaurants, tables, time slots, and manage reservations.
+      </p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex flex-wrap gap-2 mb-8">
+      <button
+        type="button"
+        (click)="setTab('overview')"
+        class="px-5 py-2.5 rounded-2xl font-semibold transition cursor-pointer"
+        [class.bg-[#0F766E]]="activeTab() === 'overview'"
+        [class.text-white]="activeTab() === 'overview'"
+        [class.bg-white]="activeTab() !== 'overview'"
+        [class.text-gray-700]="activeTab() !== 'overview'"
+      >
+        Overview
+      </button>
+      <button
+        type="button"
+        (click)="setTab('restaurants')"
+        class="px-5 py-2.5 rounded-2xl font-semibold transition cursor-pointer"
+        [class.bg-[#0F766E]]="activeTab() === 'restaurants'"
+        [class.text-white]="activeTab() === 'restaurants'"
+        [class.bg-white]="activeTab() !== 'restaurants'"
+        [class.text-gray-700]="activeTab() !== 'restaurants'"
+      >
+        Restaurants
+      </button>
+      <button
+        type="button"
+        (click)="setTab('setup')"
+        class="px-5 py-2.5 rounded-2xl font-semibold transition cursor-pointer"
+        [class.bg-[#0F766E]]="activeTab() === 'setup'"
+        [class.text-white]="activeTab() === 'setup'"
+        [class.bg-white]="activeTab() !== 'setup'"
+        [class.text-gray-700]="activeTab() !== 'setup'"
+      >
+        Tables &amp; Slots
+      </button>
+      <button
+        type="button"
+        (click)="setTab('reservations')"
+        class="px-5 py-2.5 rounded-2xl font-semibold transition cursor-pointer"
+        [class.bg-[#0F766E]]="activeTab() === 'reservations'"
+        [class.text-white]="activeTab() === 'reservations'"
+        [class.bg-white]="activeTab() !== 'reservations'"
+        [class.text-gray-700]="activeTab() !== 'reservations'"
+      >
+        Reservations
+      </button>
+    </div>
+
+    @if (loading() && activeTab() === 'overview' && !stats()) {
+      <div class="flex justify-center py-20">
+        <div
+          class="w-12 h-12 rounded-full border-4 border-[#0F766E]/20 border-t-[#0F766E] animate-spin"
+        ></div>
+      </div>
+    }
+
+    <!-- OVERVIEW -->
+    @if (activeTab() === 'overview') {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div class="bg-white rounded-3xl p-6 shadow-sm">
+          <p class="text-gray-500 text-sm">Total Reservations</p>
+          <h2 class="text-3xl font-bold text-gray-900 mt-2">{{ stats()?.totalReservations ?? '—' }}</h2>
+        </div>
+        <div class="bg-white rounded-3xl p-6 shadow-sm">
+          <p class="text-gray-500 text-sm">Pending</p>
+          <h2 class="text-3xl font-bold text-[#0F766E] mt-2">{{ pendingCount() }}</h2>
+        </div>
+        <div class="bg-white rounded-3xl p-6 shadow-sm">
+          <p class="text-gray-500 text-sm">Confirmed</p>
+          <h2 class="text-3xl font-bold text-gray-900 mt-2">{{ stats()?.activeReservations ?? '—' }}</h2>
+        </div>
+        <div class="bg-white rounded-3xl p-6 shadow-sm">
+          <p class="text-gray-500 text-sm">Tables / Restaurants</p>
+          <h2 class="text-3xl font-bold text-[#0F766E] mt-2">
+            {{ stats()?.totalTables ?? restaurants().length }} /
+            {{ stats()?.totalRestaurants ?? restaurants().length }}
+          </h2>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl shadow-sm p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Restaurants</h3>
+        <div class="space-y-3">
+          @for (r of restaurants(); track r.id) {
+            <div
+              class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-[#FFF7ED]"
+            >
+              <div>
+                <p class="font-semibold text-gray-900">{{ r.name }}</p>
+                <p class="text-sm text-gray-500">
+                  {{ r.totalTables }} tables · {{ r.totalReservations }} reservations
+                </p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span
+                  class="px-3 py-1 rounded-full text-sm font-semibold"
+                  [class.bg-green-100]="r.isActive"
+                  [class.text-green-700]="r.isActive"
+                  [class.bg-gray-200]="!r.isActive"
+                  [class.text-gray-600]="!r.isActive"
+                >
+                  {{ r.isActive ? 'Active' : 'Inactive' }}
+                </span>
+                <button
+                  type="button"
+                  (click)="startRestaurantEdit(r)"
+                  class="px-3 py-1.5 rounded-xl bg-teal-50 text-teal-700 border border-teal-200 text-sm font-semibold hover:bg-[#0F766E] hover:text-white transition cursor-pointer"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  (click)="deleteRestaurant(r)"
+                  class="px-3 py-1.5 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm font-semibold hover:bg-red-600 hover:text-white transition cursor-pointer"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ADD RESTAURANT -->
+    @if (activeTab() === 'restaurants') {
+      <div class="bg-white rounded-3xl shadow-sm p-6 max-w-3xl">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Add restaurant</h3>
+
+        <form [formGroup]="restaurantForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-semibold text-gray-600" [class.text-red-500]="restaurantForm.get('name')?.touched && restaurantForm.get('name')?.invalid">Name *</label>
+              <input formControlName="name" class="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none mt-1" [class.border-red-500]="restaurantForm.get('name')?.touched && restaurantForm.get('name')?.invalid" />
+              @if (restaurantForm.get('name')?.touched && restaurantForm.get('name')?.invalid) {
+                <p class="text-xs text-red-500 mt-1">Name is required</p>
+              }
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-gray-600" [class.text-red-500]="restaurantForm.get('cuisineType')?.touched && restaurantForm.get('cuisineType')?.invalid">Cuisine *</label>
+              <input formControlName="cuisineType" class="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none mt-1" [class.border-red-500]="restaurantForm.get('cuisineType')?.touched && restaurantForm.get('cuisineType')?.invalid" />
+              @if (restaurantForm.get('cuisineType')?.touched && restaurantForm.get('cuisineType')?.invalid) {
+                <p class="text-xs text-red-500 mt-1">Cuisine type is required</p>
+              }
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-gray-600" [class.text-red-500]="restaurantForm.get('city')?.touched && restaurantForm.get('city')?.invalid">City *</label>
+              <input formControlName="city" class="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none mt-1" [class.border-red-500]="restaurantForm.get('city')?.touched && restaurantForm.get('city')?.invalid" />
+              @if (restaurantForm.get('city')?.touched && restaurantForm.get('city')?.invalid) {
+                <p class="text-xs text-red-500 mt-1">City is required</p>
+              }
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-gray-600" [class.text-red-500]="restaurantForm.get('phone')?.touched && restaurantForm.get('phone')?.invalid">Phone *</label>
+              <input formControlName="phone" class="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none mt-1" [class.border-red-500]="restaurantForm.get('phone')?.touched && restaurantForm.get('phone')?.invalid" />
+              @if (restaurantForm.get('phone')?.touched && restaurantForm.get('phone')?.invalid) {
+                <p class="text-xs text-red-500 mt-1">Phone is required</p>
+              }
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-sm font-semibold text-gray-600" [class.text-red-500]="restaurantForm.get('address')?.touched && restaurantForm.get('address')?.invalid">Address *</label>
+              <input formControlName="address" class="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none mt-1" [class.border-red-500]="restaurantForm.get('address')?.touched && restaurantForm.get('address')?.invalid" />
+              @if (restaurantForm.get('address')?.touched && restaurantForm.get('address')?.invalid) {
+                <p class="text-xs text-red-500 mt-1">Address is required</p>
+              }
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-sm font-semibold text-gray-600">Description</label>
+              <textarea
+                formControlName="description"
+                rows="2"
+                class="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none mt-1"
+              ></textarea>
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-gray-600" [class.text-red-500]="restaurantForm.get('openingTime')?.touched && restaurantForm.get('openingTime')?.invalid">Opening Time *</label>
+              <input type="time" formControlName="openingTime" class="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none mt-1" [class.border-red-500]="restaurantForm.get('openingTime')?.touched && restaurantForm.get('openingTime')?.invalid" />
+              @if (restaurantForm.get('openingTime')?.touched && restaurantForm.get('openingTime')?.invalid) {
+                <p class="text-xs text-red-500 mt-1">Opening time is required</p>
+              }
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-gray-600" [class.text-red-500]="restaurantForm.get('closingTime')?.touched && restaurantForm.get('closingTime')?.invalid">Closing Time *</label>
+              <input type="time" formControlName="closingTime" class="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none mt-1" [class.border-red-500]="restaurantForm.get('closingTime')?.touched && restaurantForm.get('closingTime')?.invalid" />
+              @if (restaurantForm.get('closingTime')?.touched && restaurantForm.get('closingTime')?.invalid) {
+                <p class="text-xs text-red-500 mt-1">Closing time is required</p>
+              }
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-sm font-semibold text-gray-600">Photo (optional)</label>
+              <input
+                #fileInput
+                type="file"
+                accept="image/*"
+                (change)="onFileSelected($event)"
+                class="w-full rounded-lg border px-3 py-2 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#0F766E]/10 file:text-[#0F766E] hover:file:bg-[#0F766E]/20 file:cursor-pointer" />
+              @if (selectedFile()) {
+                <p class="text-xs text-green-600 mt-2 font-semibold">Selected: {{ selectedFile()?.name }}</p>
+              }
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="saveRestaurant()"
+            [disabled]="savingRestaurant()"
+            class="w-full md:w-auto px-8 bg-[#0F766E] text-white py-3 rounded-2xl font-semibold cursor-pointer disabled:opacity-50"
+          >
+            @if (savingRestaurant()) {
+              Saving...
+            } @else {
+              Add restaurant
+            }
+          </button>
+        </form>
+      </div>
+    }
+
+    <!-- SETUP: Tables & Slots -->
+    @if (activeTab() === 'setup') {
+      <div class="mb-6 flex flex-wrap items-end gap-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Restaurant</label>
+          <select
+            class="rounded-xl border border-gray-300 px-4 py-2.5 min-w-[220px] bg-white"
+            [value]="selectedRestaurantId() ?? ''"
+            (change)="onRestaurantSelect($event)"
+          >
+            @for (r of restaurants(); track r.id) {
+              <option [value]="r.id">{{ r.name }} ({{ r.city }})</option>
+            }
+          </select>
+        </div>
+        @if (selectedRestaurant()) {
+          <button
+            type="button"
+            (click)="toggleRestaurantActive()"
+            class="px-4 py-2.5 rounded-xl border border-[#0F766E] text-[#0F766E] font-semibold hover:bg-[#0F766E] hover:text-white transition cursor-pointer"
+          >
+            {{ selectedRestaurant()!.isActive ? 'Deactivate' : 'Activate' }} restaurant
+          </button>
+        }
+      </div>
+
+      @if (!selectedRestaurantId()) {
+        <p class="text-gray-500">Select a restaurant to manage tables and time slots.</p>
+      } @else {
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <!-- TABLES -->
+          <div class="bg-white rounded-3xl shadow-sm p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">
+              Tables
+              <span class="text-sm font-normal text-gray-500">({{ tables().length }})</span>
+            </h3>
+
+            <form [formGroup]="tableForm" class="space-y-3 mb-6 p-4 rounded-2xl bg-[#FFF7ED]">
+              <p class="text-sm font-semibold text-gray-700">
+                {{ editingTableId() ? 'Edit table' : 'Add table' }}
+              </p>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs text-gray-500">Table #</label>
+                  <input
+                    type="number"
+                    formControlName="tableNumber"
+                    min="1"
+                    class="w-full rounded-lg border px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500">Capacity</label>
+                  <input
+                    type="number"
+                    formControlName="capacity"
+                    min="1"
+                    class="w-full rounded-lg border px-3 py-2"
+                  />
+                </div>
+              </div>
+              <div>
+                <label class="text-xs text-gray-500">Location</label>
+                <select formControlName="location" class="w-full rounded-lg border px-3 py-2">
+                  @for (loc of locations; track loc) {
+                    <option [value]="loc">{{ loc }}</option>
+                  }
+                </select>
+              </div>
+              @if (editingTableId()) {
+                <label class="flex items-center gap-2 text-sm text-gray-600">
+                  <input type="checkbox" formControlName="isAvailable" />
+                  Available for booking
+                </label>
+              }
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  (click)="saveTable()"
+                  class="flex-1 bg-[#0F766E] text-white py-2.5 rounded-xl font-semibold cursor-pointer"
+                >
+                  {{ editingTableId() ? 'Update' : 'Add' }} table
+                </button>
+                @if (editingTableId()) {
+                  <button
+                    type="button"
+                    (click)="cancelTableEdit()"
+                    class="px-4 py-2.5 rounded-xl border text-gray-600 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                }
+              </div>
+            </form>
+
+            <ul class="space-y-2 max-h-80 overflow-y-auto">
+              @for (t of tables(); track t.id) {
+                <li
+                  class="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100"
+                >
+                  <div>
+                    <p class="font-medium">Table {{ t.tableNumber }}</p>
+                    <p class="text-xs text-gray-500">
+                      {{ t.capacity }} seats · {{ t.location }} ·
+                      {{ t.isAvailable ? 'Available' : 'Unavailable' }}
+                    </p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      (click)="startTableEdit(t)"
+                      class="text-sm text-[#0F766E] font-semibold cursor-pointer"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      (click)="deleteTable(t)"
+                      class="text-sm text-red-500 font-semibold cursor-pointer"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              } @empty {
+                <p class="text-sm text-gray-500 text-center py-4">No tables yet. Add one above.</p>
+              }
+            </ul>
+          </div>
+
+          <!-- TIME SLOTS -->
+          <div class="bg-white rounded-3xl shadow-sm p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">
+              Time slots
+              <span class="text-sm font-normal text-gray-500">({{ slots().length }})</span>
+            </h3>
+
+            <form [formGroup]="slotForm" class="space-y-3 mb-6 p-4 rounded-2xl bg-[#FFF7ED]">
+              <p class="text-sm font-semibold text-gray-700">
+                {{ editingSlotId() ? 'Edit slot' : 'Add slot' }}
+              </p>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs text-gray-500">Time (HH:mm)</label>
+                  <input type="time" formControlName="slotTime" class="w-full rounded-lg border px-3 py-2" />
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500">Day (optional)</label>
+                  <select formControlName="dayOfWeek" class="w-full rounded-lg border px-3 py-2">
+                    @for (d of daysOfWeek; track d) {
+                      <option [value]="d">{{ d || 'Every day' }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <label class="flex items-center gap-2 text-sm text-gray-600">
+                <input type="checkbox" formControlName="isActive" />
+                Active (shown in availability check)
+              </label>
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  (click)="saveSlot()"
+                  class="flex-1 bg-[#0F766E] text-white py-2.5 rounded-xl font-semibold cursor-pointer"
+                >
+                  {{ editingSlotId() ? 'Update' : 'Add' }} slot
+                </button>
+                @if (editingSlotId()) {
+                  <button
+                    type="button"
+                    (click)="cancelSlotEdit()"
+                    class="px-4 py-2.5 rounded-xl border text-gray-600 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                }
+              </div>
+            </form>
+
+            <ul class="space-y-2 max-h-80 overflow-y-auto">
+              @for (s of slots(); track s.id) {
+                <li
+                  class="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100"
+                >
+                  <div>
+                    <p class="font-medium">{{ s.slotTime }}</p>
+                    <p class="text-xs text-gray-500">
+                      {{ s.dayOfWeek || 'All days' }} ·
+                      {{ s.isActive ? 'Active' : 'Inactive' }}
+                    </p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      (click)="startSlotEdit(s)"
+                      class="text-sm text-[#0F766E] font-semibold cursor-pointer"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      (click)="deleteSlot(s)"
+                      class="text-sm text-red-500 font-semibold cursor-pointer"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              } @empty {
+                <p class="text-sm text-gray-500 text-center py-4">No time slots yet. Add one above.</p>
+              }
+            </ul>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- RESERVATIONS -->
+    @if (activeTab() === 'reservations') {
+      <div class="bg-white rounded-3xl shadow-sm p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">All reservations</h3>
+        <div class="space-y-3">
+          @for (r of reservations(); track r.id) {
+            <div
+              class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-[#FFF7ED]"
+            >
+              <div>
+                <p class="font-semibold text-gray-900">{{ r.restaurantName }}</p>
+                <p class="text-sm text-gray-500">
+                  {{ r.guestCount }} guests · {{ r.reservationDate }} · {{ r.slotTime }} · Table
+                  {{ r.tableNumber }}
+                </p>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-3 py-1 rounded-full text-sm font-semibold" [ngClass]="statusClass(r.status)">
+                  {{ r.status }}
+                </span>
+                @if (r.status === 'PENDING') {
+                  <button
+                    type="button"
+                    (click)="confirmReservation(r)"
+                    class="px-3 py-1.5 rounded-xl bg-[#0F766E] text-white text-sm font-semibold cursor-pointer"
+                  >
+                    Confirm
+                  </button>
+                }
+                @if (r.status !== 'CANCELLED') {
+                  <button
+                    type="button"
+                    (click)="cancelReservation(r)"
+                    class="px-3 py-1.5 rounded-xl border border-red-300 text-red-600 text-sm font-semibold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                }
+              </div>
+            </div>
+          } @empty {
+            <p class="text-gray-500 text-center py-8">No reservations yet.</p>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ─── Premium Custom Confirm Modal ────────────────────────────────────────── -->
+@if (confirmState().visible) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    style="background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);"
+  >
+    <div
+      class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-[fadeSlideUp_0.2s_ease-out]"
+      style="animation: fadeSlideUp 0.2s ease-out;"
+    >
+      <!-- Icon -->
+      <div class="flex items-center justify-center mb-5">
+        <div
+          class="w-16 h-16 rounded-full flex items-center justify-center"
+          [class.bg-red-100]="confirmState().danger"
+          [class.bg-green-100]="!confirmState().danger"
+        >
+          <i
+            class="text-2xl fa-solid"
+            [class.fa-triangle-exclamation]="confirmState().danger"
+            [class.text-red-600]="confirmState().danger"
+            [class.fa-circle-check]="!confirmState().danger"
+            [class.text-green-600]="!confirmState().danger"
+          ></i>
+        </div>
+      </div>
+
+      <!-- Title & Message -->
+      <h2 class="text-2xl font-bold text-gray-900 text-center mb-2">{{ confirmState().title }}</h2>
+      <p class="text-gray-500 text-center leading-relaxed mb-8">{{ confirmState().message }}</p>
+
+      <!-- Actions -->
+      <div class="flex gap-3">
+        <button
+          type="button"
+          (click)="closeConfirm()"
+          class="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition cursor-pointer"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="executeConfirm()"
+          class="flex-1 py-3 rounded-2xl font-semibold text-white transition cursor-pointer"
+          [class.bg-red-500]="confirmState().danger"
+          [class.hover:bg-red-600]="confirmState().danger"
+          [class.bg-[#0F766E]]="!confirmState().danger"
+          [class.hover:bg-[#0D665B]]="!confirmState().danger"
+        >
+          {{ confirmState().confirmLabel }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ─── Premium Custom Edit Restaurant Modal ────────────────────────────────── -->
+@if (editingRestaurant()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    style="background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);"
+  >
+    <div
+      class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8 max-h-[90vh] overflow-y-auto animate-[fadeSlideUp_0.2s_ease-out]"
+      style="animation: fadeSlideUp 0.2s ease-out;"
+    >
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Edit Restaurant</h2>
+        <button
+          type="button"
+          (click)="cancelRestaurantEdit()"
+          class="text-gray-400 hover:text-gray-600 transition cursor-pointer text-xl"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form [formGroup]="editRestaurantForm" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-gray-600 font-semibold" [class.text-red-500]="editRestaurantForm.get('name')?.touched && editRestaurantForm.get('name')?.invalid">Name *</label>
+            <input formControlName="name" class="w-full rounded-lg border px-3 py-2 mt-1 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none" [class.border-red-500]="editRestaurantForm.get('name')?.touched && editRestaurantForm.get('name')?.invalid" />
+            @if (editRestaurantForm.get('name')?.touched && editRestaurantForm.get('name')?.invalid) {
+              <p class="text-xs text-red-500 mt-1">Name is required</p>
+            }
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 font-semibold" [class.text-red-500]="editRestaurantForm.get('cuisineType')?.touched && editRestaurantForm.get('cuisineType')?.invalid">Cuisine *</label>
+            <input formControlName="cuisineType" class="w-full rounded-lg border px-3 py-2 mt-1 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none" [class.border-red-500]="editRestaurantForm.get('cuisineType')?.touched && editRestaurantForm.get('cuisineType')?.invalid" />
+            @if (editRestaurantForm.get('cuisineType')?.touched && editRestaurantForm.get('cuisineType')?.invalid) {
+              <p class="text-xs text-red-500 mt-1">Cuisine type is required</p>
+            }
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 font-semibold" [class.text-red-500]="editRestaurantForm.get('city')?.touched && editRestaurantForm.get('city')?.invalid">City *</label>
+            <input formControlName="city" class="w-full rounded-lg border px-3 py-2 mt-1 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none" [class.border-red-500]="editRestaurantForm.get('city')?.touched && editRestaurantForm.get('city')?.invalid" />
+            @if (editRestaurantForm.get('city')?.touched && editRestaurantForm.get('city')?.invalid) {
+              <p class="text-xs text-red-500 mt-1">City is required</p>
+            }
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 font-semibold" [class.text-red-500]="editRestaurantForm.get('phone')?.touched && editRestaurantForm.get('phone')?.invalid">Phone *</label>
+            <input formControlName="phone" class="w-full rounded-lg border px-3 py-2 mt-1 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none" [class.border-red-500]="editRestaurantForm.get('phone')?.touched && editRestaurantForm.get('phone')?.invalid" />
+            @if (editRestaurantForm.get('phone')?.touched && editRestaurantForm.get('phone')?.invalid) {
+              <p class="text-xs text-red-500 mt-1">Phone is required</p>
+            }
+          </div>
+          <div class="md:col-span-2">
+            <label class="text-sm text-gray-600 font-semibold" [class.text-red-500]="editRestaurantForm.get('address')?.touched && editRestaurantForm.get('address')?.invalid">Address *</label>
+            <input formControlName="address" class="w-full rounded-lg border px-3 py-2 mt-1 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none" [class.border-red-500]="editRestaurantForm.get('address')?.touched && editRestaurantForm.get('address')?.invalid" />
+            @if (editRestaurantForm.get('address')?.touched && editRestaurantForm.get('address')?.invalid) {
+              <p class="text-xs text-red-500 mt-1">Address is required</p>
+            }
+          </div>
+          <div class="md:col-span-2">
+            <label class="text-sm text-gray-600 font-semibold">Description</label>
+            <textarea
+              formControlName="description"
+              rows="2"
+              class="w-full rounded-lg border px-3 py-2 mt-1 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none"
+            ></textarea>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 font-semibold" [class.text-red-500]="editRestaurantForm.get('openingTime')?.touched && editRestaurantForm.get('openingTime')?.invalid">Opening Time *</label>
+            <input type="time" formControlName="openingTime" class="w-full rounded-lg border px-3 py-2 mt-1 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none" [class.border-red-500]="editRestaurantForm.get('openingTime')?.touched && editRestaurantForm.get('openingTime')?.invalid" />
+            @if (editRestaurantForm.get('openingTime')?.touched && editRestaurantForm.get('openingTime')?.invalid) {
+              <p class="text-xs text-red-500 mt-1">Opening time is required</p>
+            }
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 font-semibold" [class.text-red-500]="editRestaurantForm.get('closingTime')?.touched && editRestaurantForm.get('closingTime')?.invalid">Closing Time *</label>
+            <input type="time" formControlName="closingTime" class="w-full rounded-lg border px-3 py-2 mt-1 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none" [class.border-red-500]="editRestaurantForm.get('closingTime')?.touched && editRestaurantForm.get('closingTime')?.invalid" />
+            @if (editRestaurantForm.get('closingTime')?.touched && editRestaurantForm.get('closingTime')?.invalid) {
+              <p class="text-xs text-red-500 mt-1">Closing time is required</p>
+            }
+          </div>
+          <div class="md:col-span-2">
+            <label class="text-sm text-gray-600 font-semibold">Photo (optional)</label>
+            <div class="mt-2 flex items-center gap-4">
+              <img
+                [src]="getRestaurantImageUrl(editingRestaurant()?.imageUrl)"
+                alt="Restaurant image"
+                class="w-16 h-16 object-cover rounded-xl border"
+              />
+              <div class="flex-1">
+                <input
+                  #editFileInput
+                  type="file"
+                  accept="image/*"
+                  (change)="onEditFileSelected($event)"
+                  class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#0F766E]/10 file:text-[#0F766E] hover:file:bg-[#0F766E]/20 file:cursor-pointer"
+                />
+                @if (selectedEditFile()) {
+                  <p class="text-xs text-green-600 mt-1 font-semibold">
+                    New photo selected: {{ selectedEditFile()?.name }}
+                  </p>
+                } @else {
+                  <p class="text-xs text-gray-400 mt-1">Leave blank to keep existing photo</p>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-8">
+          <button
+            type="button"
+            (click)="cancelRestaurantEdit()"
+            class="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            (click)="saveRestaurantEdit()"
+            [disabled]="savingRestaurantEdit()"
+            class="flex-1 py-3 rounded-2xl bg-[#0F766E] text-white font-semibold hover:bg-[#0D665B] transition cursor-pointer disabled:opacity-50"
+          >
+            @if (savingRestaurantEdit()) {
+              Saving Changes...
+            } @else {
+              Save Changes
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

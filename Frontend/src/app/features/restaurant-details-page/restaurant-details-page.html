@@ -1,0 +1,265 @@
+<section class="min-h-screen bg-[#FFF7ED] py-12">
+  <div class="max-w-6xl mx-auto px-6">
+    <!-- Restaurant Header -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <!-- Image -->
+      <div class="rounded-3xl overflow-hidden shadow-lg">
+        <img [src]="getImageUrl()" class="w-full h-87.5 object-cover" />
+      </div>
+
+      <!-- Info -->
+      <div class="space-y-5">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-900">{{restaurant()?.name}}</h1>
+
+          <p class="text-gray-500 mt-2">{{restaurant()?.description}}</p>
+        </div>
+
+        <!-- Tags -->
+        <div class="flex gap-3 flex-wrap">
+          <span class="px-4 py-1 bg-[#0F766E]/10 text-[#0F766E] rounded-full text-sm">
+            {{restaurant()?.cuisineType}}
+          </span>
+
+          <span class="px-4 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"> {{restaurant()?.city}} </span>
+
+          <span class="px-4 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"> {{restaurant()?.isActive ? 'Active' : 'Inactive'}} </span>
+        </div>
+
+        <!-- Details -->
+        <div class="space-y-3 text-gray-600">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-location-dot text-[#D4A373]"></i>
+            <span>{{restaurant()?.address}}</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-phone text-[#D4A373]"></i>
+            <span>{{restaurant()?.phone}}</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <i class="fa-regular fa-clock text-[#D4A373]"></i>
+            <span> {{restaurant()?.openingTime}} </span>
+          </div>
+        </div>
+
+        <!-- Action -->
+        <div class="flex pt-4">
+          <!-- Check availability -->
+          <button
+            (click)="toggleModal()"
+            [ngClass]="authService.isLogged() 
+              ? 'cursor-pointer bg-white border border-[#0F766E] text-[#0F766E] hover:bg-[#0F766E] hover:text-white'
+              : 'cursor-pointer bg-gray-200 border border-gray-400 text-gray-500 opacity-75'"
+            class="flex-1 py-3 rounded-2xl font-semibold transition"
+            [title]="!authService.isLogged() ? 'Please log in to check availability' : ''"
+          >
+            @if (authService.isLogged()) {
+              Check Availability
+            } @else {
+              <i class="fa-solid fa-lock mr-2"></i>Log in to Check Availability
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extra Section -->
+    <div class="mt-16 bg-white rounded-3xl p-8 shadow-sm">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">About this restaurant</h2>
+
+      <p class="text-gray-600 leading-relaxed">{{restaurant()?.description}}</p>
+    </div>
+  </div>
+</section>
+
+@if (modal()) {
+  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 w-full max-w-md">
+      <div class="flex flex-row justify-between items-center">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Check Availability</h2>
+        <button (click)="toggleModal()" class="cursor-pointer text-gray-500 hover:text-gray-700">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form class="space-y-4" [formGroup]="availabilityForm" (ngSubmit)="checkAvailability()">
+        <!-- Restaurant ID -->
+        <div>
+          <label for="id" class="block text-sm text-gray-600 mb-1.5"> Restaurant ID </label>
+
+          <div class="relative">
+            <i
+              class="fa-solid fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]"
+            ></i>
+
+            <input
+              formControlName="restaurantId"
+              id="id"
+              type="text"
+              readonly
+              class="w-full pl-12 pr-4 py-3 rounded-xl border bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+              [ngClass]="{
+                'border-red-500':
+                  availabilityForm.get('restaurantId')?.invalid &&
+                  availabilityForm.get('restaurantId')?.touched,
+                'border-gray-200': !(
+                  availabilityForm.get('restaurantId')?.invalid &&
+                  availabilityForm.get('restaurantId')?.touched
+                ),
+              }"
+            />
+          </div>
+
+          @if (
+            availabilityForm.get('restaurantId')?.errors &&
+            availabilityForm.get('restaurantId')?.touched
+          ) {
+            <p class="mt-1 text-sm text-red-500">Restaurant ID is required</p>
+          }
+        </div>
+
+        <!-- Date -->
+        <div>
+          <label class="block text-gray-700 mb-1">Date</label>
+
+          <input
+            type="date"
+            formControlName="date"
+            class="w-full rounded-lg px-4 py-2 outline-none border focus:ring-2"
+            [ngClass]="{
+              'border-red-500 focus:ring-red-200':
+                availabilityForm.get('date')?.invalid && availabilityForm.get('date')?.touched,
+
+              'border-gray-300 focus:ring-[#0F766E]': !(
+                availabilityForm.get('date')?.invalid && availabilityForm.get('date')?.touched
+              ),
+            }"
+          />
+
+          @if (availabilityForm.get('date')?.errors && availabilityForm.get('date')?.touched) {
+            <p class="mt-1 text-sm text-red-500">Date is required</p>
+          }
+        </div>
+
+        <!-- Guests -->
+        <div>
+          <label class="block text-gray-700 mb-1">Guest Count</label>
+
+          <input
+            type="number"
+            formControlName="guests"
+            min="1"
+            class="w-full rounded-lg px-4 py-2 outline-none border focus:ring-2"
+            [ngClass]="{
+              'border-red-500 focus:ring-red-200':
+                availabilityForm.get('guests')?.invalid && availabilityForm.get('guests')?.touched,
+
+              'border-gray-300 focus:ring-[#0F766E]': !(
+                availabilityForm.get('guests')?.invalid && availabilityForm.get('guests')?.touched
+              ),
+            }"
+          />
+
+          @if (availabilityForm.get('guests')?.errors && availabilityForm.get('guests')?.touched) {
+            @if (availabilityForm.get('guests')?.getError('required')) {
+              <p class="mt-1 text-sm text-red-500">Guest count is required</p>
+            }
+
+            @if (availabilityForm.get('guests')?.getError('min')) {
+              <p class="mt-1 text-sm text-red-500">Minimum guests is 1</p>
+            }
+
+            @if (availabilityForm.get('guests')?.getError('max')) {
+              <p class="mt-1 text-sm text-red-500">Maximum guests is 20</p>
+            }
+          }
+        </div>
+
+        <!-- Submit -->
+        <button
+          type="submit"
+          [disabled]="loadingSlots()"
+          class="w-full cursor-pointer bg-[#0F766E] text-white py-3 rounded-2xl font-semibold hover:bg-[#0D665B] transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          @if (loadingSlots()) {
+            <i class="fa-solid fa-spin fa-spinner"></i> Loading...
+          } @else {
+            Check
+          }
+        </button>
+      </form>
+
+      <!-- Step 1: Loading slots -->
+      @if (loadingSlots()) {
+        <div class="flex flex-col items-center justify-center py-6 text-gray-500 mt-4">
+          <i class="fa-solid fa-spinner fa-spin text-2xl text-[#0F766E] mb-2"></i>
+          <p class="text-sm">Fetching available slots...</p>
+        </div>
+      }
+
+      <!-- Step 1: Slot display -->
+      @if (hasChecked() && availableSlots().length > 0 && !loadingSlots()) {
+        <div class="mt-5 border-t border-gray-100 pt-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">Step 1: Select a Time Slot</h3>
+          <ul class="grid grid-cols-3 gap-2">
+            @for (slot of availableSlots(); track slot.id) {
+              <li
+                (click)="selectSlotAndCheck(slot)"
+                [ngClass]="selectedSlot()?.id === slot.id 
+                  ? 'bg-[#0F766E] text-white border-[#0F766E]' 
+                  : 'bg-white text-[#0F766E] border-gray-200 hover:border-[#0F766E]'"
+                class="border-2 px-3 py-2.5 rounded-xl cursor-pointer font-semibold text-center text-sm transition-all duration-200 select-none"
+              >
+                {{ slot.slotTime }}
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (hasChecked() && availableSlots().length === 0 && !loadingSlots() && !availabilityError()) {
+        <div class="mt-5 p-4 bg-orange-50 border border-orange-100 text-orange-800 rounded-2xl text-sm">
+          No available time slots found for this date. Please select another day.
+        </div>
+      }
+
+      <!-- Step 2: Allocation Loading -->
+      @if (checking()) {
+        <div class="flex items-center justify-center gap-2 py-4 text-gray-600 mt-5 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+          <i class="fa-solid fa-spinner fa-spin text-[#0F766E]"></i>
+          <span class="text-sm font-medium">Allocating best table via strategy...</span>
+        </div>
+      }
+
+      <!-- Step 2: Allocation Result (Success Badge) -->
+      @if (assignmentResult() && !checking()) {
+        <div class="mt-5 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-start gap-3 animate-fade-in">
+          <i class="fa-solid fa-circle-check text-emerald-600 text-lg mt-0.5"></i>
+          <div class="flex-1">
+            <h4 class="font-bold text-emerald-950">Table Allocated!</h4>
+            <p class="text-xs mt-1 text-emerald-800">
+              We have allocated <strong>Table #{{ assignmentResult()?.tableNumber }}</strong> in the <strong class="uppercase text-emerald-900">{{ assignmentResult()?.location }}</strong> zone .
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          (click)="proceedToBooking()"
+          class="w-full mt-4 cursor-pointer bg-[#0F766E] text-white py-3.5 rounded-2xl font-bold hover:bg-[#0D665B] transition shadow-md flex items-center justify-center gap-2"
+        >
+          Confirm & Proceed <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+      }
+
+      @if (availabilityError()) {
+        <div class="mt-5 p-4 bg-red-50 border border-red-100 text-red-800 rounded-2xl text-sm">
+          {{ availabilityError() }}
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,228 @@
+<section class="min-h-screen bg-[#FFF7ED] py-12">
+  <div class="max-w-6xl mx-auto px-6">
+    <!-- PAGE TITLE -->
+    <div class="mb-10">
+      <h1 class="text-4xl font-bold text-gray-900">Confirm Your Reservation</h1>
+      <p class="text-gray-500 mt-2">
+        Review your reservation details before confirming your booking.
+      </p>
+    </div>
+
+    @if (loading()) {
+      <div class="flex justify-center py-20">
+        <div
+          class="w-12 h-12 rounded-full border-4 border-[#0F766E]/20 border-t-[#0F766E] animate-spin"
+        ></div>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- LEFT SIDE -->
+        <form [formGroup]="bookingForm" class="lg:col-span-2 space-y-8">
+          <!-- RESTAURANT CARD -->
+          <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+            <img
+              [src]="getImageUrl()"
+              class="w-full h-72 object-cover"
+              alt="Restaurant"
+            />
+
+            <div class="p-6">
+              <div class="flex items-start justify-between gap-5">
+                <div>
+                  <h2 class="text-3xl font-bold text-gray-900">
+                    {{ restaurantDetails()?.name }}
+                  </h2>
+
+                  <p class="text-gray-500 mt-2">
+                    {{ restaurantDetails()?.description }}
+                  </p>
+                </div>
+
+                <span
+                  class="px-4 py-2 rounded-full bg-[#0F766E]/10 text-[#0F766E] text-sm font-semibold"
+                >
+                  {{ restaurantDetails()?.cuisineType }}
+                </span>
+              </div>
+
+              <!-- DETAILS -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-11 h-11 rounded-2xl bg-[#0F766E]/10 flex items-center justify-center"
+                  >
+                    <i class="fa-regular fa-calendar text-[#0F766E]"></i>
+                  </div>
+
+                  <div>
+                    <p class="text-sm text-gray-500">Reservation Date</p>
+                    <p class="font-semibold text-gray-800">
+                      {{ date() }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-11 h-11 rounded-2xl bg-[#0F766E]/10 flex items-center justify-center"
+                  >
+                    <i class="fa-regular fa-clock text-[#0F766E]"></i>
+                  </div>
+
+                  <div>
+                    <p class="text-sm text-gray-500">Selected Time</p>
+                    <p class="font-semibold text-gray-800">
+                      {{ slotTime() }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-11 h-11 rounded-2xl bg-[#0F766E]/10 flex items-center justify-center"
+                  >
+                    <i class="fa-solid fa-user-group text-[#0F766E]"></i>
+                  </div>
+
+                  <div>
+                    <p class="text-sm text-gray-500">Guests</p>
+                    <p class="font-semibold text-gray-800">{{ guests() }} Guests</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-11 h-11 rounded-2xl bg-[#0F766E]/10 flex items-center justify-center"
+                  >
+                    <i class="fa-solid fa-location-dot text-[#0F766E]"></i>
+                  </div>
+
+                  <div>
+                    <p class="text-sm text-gray-500">Location</p>
+                    <p class="font-semibold text-gray-800">
+                      {{ restaurantDetails()?.address }}, {{ restaurantDetails()?.city }}
+                    </p>
+                  </div>
+                </div>
+
+                @if (tableNumber()) {
+                  <div class="flex items-center gap-3 col-span-1 md:col-span-2 mt-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-4 transition-all hover:bg-emerald-50">
+                    <div class="w-11 h-11 rounded-2xl bg-emerald-100 flex items-center justify-center shadow-sm">
+                      <i class="fa-solid fa-chair text-emerald-600 text-lg"></i>
+                    </div>
+                    <div>
+                      <p class="text-xs text-emerald-800/80 font-medium uppercase tracking-wider">Pre-Allocated Table</p>
+                      <p class="font-semibold text-emerald-950">
+                        Table #{{ tableNumber() }} &mdash; <span class="text-emerald-800 font-medium">{{ tableLocation() }} Zone</span>
+                      </p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- SPECIAL REQUEST -->
+          <div class="bg-white rounded-3xl shadow-sm p-6">
+            <h3 class="text-2xl font-bold text-gray-900 mb-5">Special Requests</h3>
+
+            <textarea
+              formControlName="specialRequest"
+              rows="5"
+              placeholder="Add any notes or special requests..."
+              class="w-full rounded-2xl border border-gray-200 px-5 py-4 outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] transition resize-none"
+            ></textarea>
+          </div>
+        </form>
+
+        <!-- RIGHT SIDE -->
+        <div>
+          <div class="bg-white rounded-3xl shadow-sm p-6 sticky top-28">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6">Reservation Summary</h3>
+
+            <div class="space-y-5">
+              <!-- ITEM -->
+              <div class="flex items-center justify-between">
+                <span class="text-gray-500">Restaurant</span>
+                <span class="font-semibold text-gray-800"> {{ restaurantDetails()?.name }} </span>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <span class="text-gray-500">Date</span>
+                <span class="font-semibold text-gray-800">
+                  {{ date() }}
+                </span>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <span class="text-gray-500">Time</span>
+                <span class="font-semibold text-gray-800">
+                  {{ slotTime() }}
+                </span>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <span class="text-gray-500">Guests</span>
+                <span class="font-semibold text-gray-800">
+                  {{ guests() }}
+                </span>
+              </div>
+
+              @if (tableNumber()) {
+                <div class="flex items-center justify-between border-t border-dashed border-gray-200 pt-4">
+                  <span class="text-gray-500">Assigned Table</span>
+                  <span class="font-semibold text-emerald-600">
+                    Table #{{ tableNumber() }} ({{ tableLocation() }})
+                  </span>
+                </div>
+              }
+
+              <div class="border-t border-dashed border-gray-200 pt-5">
+                <div class="flex items-center justify-between">
+                  <span class="text-lg font-semibold text-gray-800"> Reservation Fee </span>
+
+                  <span class="text-2xl font-bold text-[#0F766E]"> Free </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="space-y-3 mt-8">
+              <button
+                type="button"
+                (click)="confirmBooking()"
+                [disabled]="submitting()"
+                class="w-full bg-[#0F766E] hover:bg-[#115E59] text-white py-4 rounded-2xl font-semibold transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                @if (submitting()) {
+                  <i class="fa-solid fa-spinner fa-spin"></i> Confirming...
+                } @else {
+                  Confirm Reservation
+                }
+              </button>
+
+              <button
+              (click)="cancelBooking()"
+                class="w-full border border-gray-300 hover:bg-gray-100 py-4 rounded-2xl font-semibold text-gray-700 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <!-- INFO -->
+            <div class="mt-6 rounded-2xl bg-[#0F766E]/5 border border-[#0F766E]/10 p-4">
+              <div class="flex gap-3">
+                <i class="fa-solid fa-circle-info text-[#0F766E] mt-1"></i>
+
+                <p class="text-sm text-gray-600 leading-relaxed">
+                  Your reservation will be confirmed instantly after submission. Please arrive at
+                  least 10 minutes before your reserved time.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</section>

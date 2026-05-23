@@ -1,0 +1,71 @@
+<section class="min-h-screen bg-[#FFF7ED] py-12">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="mb-10">
+      <h1 class="text-4xl font-bold text-gray-900">My Reservations</h1>
+      <p class="text-gray-500 mt-2">View your dining history and upcoming reservations.</p>
+    </div>
+
+    @if (reservations().length === 0) {
+      <div class="text-center py-24">
+        <div
+          class="w-24 h-24 mx-auto rounded-full bg-[#0F766E]/10 flex items-center justify-center"
+        >
+          <i class="fa-solid fa-calendar text-3xl text-[#0F766E]"></i>
+        </div>
+
+        <h3 class="mt-6 text-2xl font-bold text-gray-800">No reservations found</h3>
+        <p class="text-gray-500 mt-2">You haven't made any reservations yet.</p>
+
+        <a routerLink="/restaurants" class="inline-block cursor-pointer mt-6 px-6 py-3 bg-[#0F766E] text-white rounded-2xl font-semibold hover:bg-[#115E59] transition">
+          Start booking
+        </a>
+      </div>
+    } @else {
+      <div class="space-y-6">
+      @for (reservation of reservations(); track reservation.id) {
+        <div class="bg-white rounded-3xl shadow-sm p-6">
+          <div class="grid md:grid-cols-4 gap-6 items-center">
+            <!-- Restaurant -->
+            <div>
+              <p class="text-sm text-gray-400">Restaurant</p>
+              <h3 class="font-bold text-lg text-gray-900">
+                {{ reservation.restaurantName }}
+              </h3>
+            </div>
+
+            <!-- Date -->
+            <div>
+              <p class="text-sm text-gray-400">Date</p>
+              <p class="font-semibold text-gray-700">
+                {{ reservation.slotTime }}
+              </p>
+            </div>
+
+            <!-- Guests -->
+            <div>
+              <p class="text-sm text-gray-400">Guests</p>
+              <p class="font-semibold text-gray-700">{{ reservation.guestCount }} people</p>
+            </div>
+
+            <!-- Status -->
+            <div class="flex items-center justify-between gap-4">
+              <span
+                class="px-4 py-2 rounded-full text-sm font-semibold"
+                [ngClass]="{
+                  'bg-green-100 text-green-600': reservation.status === 'CONFIRMED',
+                  'bg-yellow-100 text-yellow-600': reservation.status === 'PENDING',
+                  'bg-red-100 text-red-600': reservation.status === 'CANCELLED',
+                  'bg-blue-100 text-blue-600': reservation.status === 'COMPLETED',
+                }"
+              >
+                {{ reservation.status }}
+              </span>
+
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+    }
+  </div>
+</section>

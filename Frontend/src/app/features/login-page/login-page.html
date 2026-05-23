@@ -1,0 +1,175 @@
+<section
+  class="min-h-100vh bg-[#FFF7ED] relative overflow-hidden flex items-center justify-center px-6 py-10"
+>
+  <!-- Background blur blobs -->
+  <div class="absolute -top-30 -left-20 w-80 h-80 rounded-full bg-[#0F766E]/10 blur-3xl"></div>
+
+  <div
+    class="absolute -bottom-25 -right-12.5 w-96 h-96 rounded-full bg-[#D4A373]/15 blur-3xl"
+  ></div>
+
+  <!-- Floating icons -->
+  <i class="fa-solid fa-utensils absolute top-20 left-20 text-6xl text-[#0F766E]/10 rotate-12"></i>
+  <i class="fa-solid fa-location-dot absolute top-32 right-24 text-5xl text-[#D4A373]/15"></i>
+  <i class="fa-solid fa-calendar-check absolute bottom-32 left-24 text-6xl text-[#0F766E]/10"></i>
+  <i class="fa-solid fa-star absolute bottom-20 right-32 text-5xl text-[#D4A373]/15"></i>
+  <i class="fa-solid fa-bowl-food absolute top-1/2 left-12 text-6xl text-[#0F766E]/10"></i>
+
+  <!-- Auth Card -->
+  <div
+    class="relative z-10 w-full max-w-5xl bg-white rounded-4xl shadow-2xl overflow-hidden grid lg:grid-cols-2"
+  >
+    <!-- Left section image -->
+    <div class="hidden lg:flex relative items-center justify-center bg-[#0F766E] p-10">
+      <img
+        src="/images/auth.jpg"
+        class="absolute inset-0 w-full h-full object-cover opacity-25"
+        alt="Dining"
+      />
+
+      <div class="relative z-10 text-white text-center max-w-md">
+        <div
+          class="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mx-auto mb-6"
+        >
+          <i class="fa-solid fa-utensils text-3xl"></i>
+        </div>
+
+        <h2 class="text-4xl font-bold mb-4">
+          Welcome to <span class="text-[#D4A373]">DineSpot</span>
+        </h2>
+
+        <p class="text-white/80 leading-relaxed">
+          Discover exceptional dining experiences, reserve instantly, and enjoy unforgettable
+          moments around every table.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right section Form -->
+    <div class="p-8 md:p-12 flex items-center">
+      <div class="w-full">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+          <div
+            class="w-16 h-16 mx-auto rounded-full bg-[#0F766E]/10 text-[#0F766E] flex items-center justify-center mb-4"
+          >
+            <i class="fa-solid fa-utensils text-2xl"></i>
+          </div>
+
+          <h1 class="text-3xl font-bold text-[#1F2937]">Welcome Back</h1>
+
+          <p class="text-[#6B7280] mt-2">Login to continue your dining journey</p>
+        </div>
+
+        <!-- Form -->
+        <form class="space-y-5" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
+          <div>
+            <label for="email" class="block text-sm text-gray-600 mb-1.5">Email Address</label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]"
+              ></i>
+              <input
+                [ngClass]="{
+                  'border-red-500! focus:ring-red-500! focus:border-red-500!':
+                    loginForm.get('email')?.invalid && loginForm.get('email')?.touched,
+
+                  'border-green-500! focus:ring-green-500! focus:border-green-500!':
+                    loginForm.get('email')?.valid && loginForm.get('email')?.touched,
+                }"
+                formControlName="email"
+                id="email"
+                type="email"
+                placeholder="user@example.com"
+                class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 outline-none transition"
+              />
+            </div>
+            <!-- error messages -->
+            @if (loginForm.get('email')?.errors && loginForm.get('email')?.touched) {
+              <div class="mt-1 mb-3 flex items-center">
+                @if (loginForm.get('email')?.hasError('required')) {
+                  <p class="text-red-500">
+                    <i class="fa-solid fa-exclamation fa-beat-fade"></i>email is required
+                  </p>
+                } @else if (loginForm.get('email')?.hasError('email')) {
+                  <p class="text-red-500">
+                    <i class="fa-solid fa-exclamation fa-beat-fade"></i>enter a valid email
+                  </p>
+                }
+              </div>
+            }
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm text-gray-600 mb-1.5">Password</label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]"
+              ></i>
+              <input
+                [ngClass]="{
+                  'border-red-500! focus:ring-red-500! focus:border-red-500!':
+                    loginForm.get('password')?.invalid && loginForm.get('password')?.touched,
+
+                  'border-green-500! focus:ring-green-500! focus:border-green-500!':
+                    loginForm.get('password')?.valid && loginForm.get('password')?.touched,
+                }"
+                formControlName="password"
+                [type]="showPassword() ? 'text' : 'password'"
+                id="password"
+                placeholder="Test123!"
+                class="w-full pl-12 pr-12 py-3 rounded-xl border border-gray-200 focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 outline-none transition"
+              />
+
+              <button
+                type="button"
+                (click)="togglePassword()"
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280]"
+              >
+                <i [class]="showPassword() ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+              </button>
+            </div>
+            <!-- error messages -->
+            @if (loginForm.get('password')?.errors && loginForm.get('password')?.touched) {
+              <div class="mt-1 mb-3 flex items-center">
+                @if (loginForm.get('password')?.hasError('required')) {
+                  <p class="text-red-500">
+                    <i class="fa-solid fa-exclamation fa-beat-fade"></i>password is required
+                  </p>
+                } @else if (loginForm.get('password')?.hasError('pattern')) {
+                  <p class="text-red-500">
+                    <i class="fa-solid fa-exclamation fa-beat-fade"></i>password must have atleast
+                    one upperCase letter, lowerCase letter, Special Character, and a number
+                  </p>
+                }
+              </div>
+            }
+          </div>
+
+          <button
+            type="submit"
+            class="cursor-pointer w-full bg-[#0F766E] hover:bg-[#115E59] text-white py-3 rounded-xl font-semibold transition"
+          >
+              @if (loggingIn()) {
+                <i class="fa-solid fa-spin fa-spinner"></i> Logging You In
+              }@else {
+                Log In
+              }
+          </button>
+        </form>
+
+        <!-- Switch -->
+        <p class="text-center text-[#6B7280] mt-6">
+          Don't have an account?
+
+          <button
+            routerLink="/register"
+            class="cursor-pointer text-[#D4A373] font-semibold ml-1 hover:underline"
+          >
+            Register
+          </button>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
