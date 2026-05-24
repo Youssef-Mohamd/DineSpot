@@ -1,0 +1,912 @@
+{
+  "info": {
+    "_postman_id": "restaurant-reservation-api",
+    "name": "Restaurant Reservation API",
+    "description": "Complete API testing collection for the Restaurant Reservation System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "restaurant_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reservation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "table_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "slot_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "1. Register Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Customer\",\n  \"email\": \"customer@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"phone\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new customer account"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPass123!\",\n  \"phone\": \"+1987654321\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register an admin account (will need role upgrade)"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Login Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login and get JWT token for customer. Save the token in auth_token variable."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login and get JWT token for admin. Save the token in auth_token variable."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Get Current User Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Get logged-in user information"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏪 Restaurants",
+      "item": [
+        {
+          "name": "1. Create Restaurant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Italian Delight\",\n  \"description\": \"Authentic Italian cuisine with fresh pasta\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"New York\",\n  \"phone\": \"+1-212-555-0123\",\n  \"cuisineType\": \"Italian\",\n  \"openingTime\": \"11:00\",\n  \"closingTime\": \"23:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/restaurants",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants"]
+            },
+            "description": "Create a new restaurant. Save restaurant_id from response."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get All Restaurants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/restaurants",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants"]
+            },
+            "description": "Get list of all active restaurants"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Restaurants by City",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/restaurants?city=New York",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants"],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "New York"
+                }
+              ]
+            },
+            "description": "Filter restaurants by city"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get Restaurants by Cuisine",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/restaurants?cuisine=Italian",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants"],
+              "query": [
+                {
+                  "key": "cuisine",
+                  "value": "Italian"
+                }
+              ]
+            },
+            "description": "Filter restaurants by cuisine type"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Get Restaurant by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurant_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "{{restaurant_id}}"]
+            },
+            "description": "Get specific restaurant details"
+          },
+          "response": []
+        },
+        {
+          "name": "6. Update Restaurant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Italian Delight - Updated\",\n  \"description\": \"Authentic Italian cuisine with fresh pasta and wine selection\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"New York\",\n  \"phone\": \"+1-212-555-0123\",\n  \"cuisineType\": \"Italian\",\n  \"openingTime\": \"11:00\",\n  \"closingTime\": \"23:30\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurant_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "{{restaurant_id}}"]
+            },
+            "description": "Update restaurant details (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "7. Upload Restaurant Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurant_id}}/image",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "{{restaurant_id}}", "image"]
+            },
+            "description": "Upload image for restaurant. Select image file in form data."
+          },
+          "response": []
+        },
+        {
+          "name": "8. Delete Restaurant",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurant_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "{{restaurant_id}}"]
+            },
+            "description": "Delete restaurant (admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🪑 Tables",
+      "item": [
+        {
+          "name": "1. Create Table",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tableNumber\": 1,\n  \"capacity\": 4,\n  \"location\": \"window\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurant_id}}/tables",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "{{restaurant_id}}", "tables"]
+            },
+            "description": "Create a new table. Location: WINDOW, CORNER, CENTER"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get All Tables",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurant_id}}/tables",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "{{restaurant_id}}", "tables"]
+            },
+            "description": "Get all tables for a restaurant"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Delete Table",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurant_id}}/tables/{{table_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "{{restaurant_id}}", "tables", "{{table_id}}"]
+            },
+            "description": "Delete a table"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "⏰ Time Slots",
+      "item": [
+        {
+          "name": "1. Create Time Slot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slotTime\": \"18:00\",\n  \"dayOfWeek\": \"MONDAY\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurant_id}}/slots",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "{{restaurant_id}}", "slots"]
+            },
+            "description": "Create time slot. Days: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get All Time Slots",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurant_id}}/slots",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "{{restaurant_id}}", "slots"]
+            },
+            "description": "Get all time slots for a restaurant"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Delete Time Slot",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/{{restaurant_id}}/slots/{{slot_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "{{restaurant_id}}", "slots", "{{slot_id}}"]
+            },
+            "description": "Delete a time slot"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📅 Reservations",
+      "item": [
+        {
+          "name": "1. Check Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/availability?restaurantId=1&date=2024-12-20&guests=4",
+              "host": ["{{baseUrl}}"],
+              "path": ["availability"],
+              "query": [
+                {
+                  "key": "restaurantId",
+                  "value": "1"
+                },
+                {
+                  "key": "date",
+                  "value": "2024-12-20"
+                },
+                {
+                  "key": "guests",
+                  "value": "4"
+                }
+              ]
+            },
+            "description": "Check available time slots for a date"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Create Reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": \"{{restaurant_id}}\",\n  \"timeSlotId\": 1,\n  \"reservationDate\": \"2024-12-20\",\n  \"guestCount\": 4,\n  \"specialRequest\": \"Window seat preferred\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            },
+            "description": "Create a new reservation. Save reservation_id from response."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get My Reservations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", "me"]
+            },
+            "description": "Get all reservations for logged-in user"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Confirm Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/{{reservation_id}}/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", "{{reservation_id}}", "confirm"]
+            },
+            "description": "Confirm a pending reservation"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Cancel Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/{{reservation_id}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", "{{reservation_id}}", "cancel"]
+            },
+            "description": "Cancel a reservation"
+          },
+          "response": []
+        },
+        {
+          "name": "6. Get Restaurant Reservations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/restaurant/{{restaurant_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", "restaurant", "{{restaurant_id}}"]
+            },
+            "description": "Get all reservations for a restaurant"
+          },
+          "response": []
+        },
+        {
+          "name": "7. Get Today's Reservations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/restaurant/{{restaurant_id}}/today",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", "restaurant", "{{restaurant_id}}", "today"]
+            },
+            "description": "Get all reservations for today"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔔 Notifications",
+      "item": [
+        {
+          "name": "1. Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "description": "Get all notifications for logged-in user"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/1/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "1", "read"]
+            },
+            "description": "Mark a notification as read"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👨‍💼 Admin Management",
+      "item": [
+        {
+          "name": "1. Get System Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "statistics"]
+            },
+            "description": "Get comprehensive system statistics (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users"]
+            },
+            "description": "Get all users with statistics (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", "1"]
+            },
+            "description": "Get user details (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Update User Role to Admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{user_id}}/role?role=ADMIN",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", "{{user_id}}", "role"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "ADMIN"
+                }
+              ]
+            },
+            "description": "Update user role to ADMIN (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Get All Restaurants (Admin View)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/restaurants",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "restaurants"]
+            },
+            "description": "Get all restaurants including inactive (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "6. Get Restaurant by ID (Admin View)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/restaurants/{{restaurant_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "restaurants", "{{restaurant_id}}"]
+            },
+            "description": "Get detailed restaurant info with admin details (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "7. Toggle Restaurant Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/restaurants/{{restaurant_id}}/toggle-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "restaurants", "{{restaurant_id}}", "toggle-status"]
+            },
+            "description": "Activate/deactivate restaurant (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "8. Get All Reservations (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "reservations"]
+            },
+            "description": "Get all reservations system-wide (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "9. Admin Cancel Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reservations/{{reservation_id}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "reservations", "{{reservation_id}}", "cancel"]
+            },
+            "description": "Cancel any reservation (admin override) (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "10. Get All Notifications (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "notifications"]
+            },
+            "description": "Get all notifications in system (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "11. Send System Broadcast",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/notifications/broadcast?message=System maintenance tonight 2-4 AM&type=SYSTEM_MAINTENANCE",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "notifications", "broadcast"],
+              "query": [
+                {
+                  "key": "message",
+                  "value": "System maintenance tonight 2-4 AM"
+                },
+                {
+                  "key": "type",
+                  "value": "SYSTEM_MAINTENANCE"
+                }
+              ]
+            },
+            "description": "Send notification to all users (admin only)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+
