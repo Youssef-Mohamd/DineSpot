@@ -2,34 +2,67 @@ package com.restaurant.reservation.security;
 
 import com.restaurant.reservation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
+/**
+ * Implementation of Spring Security's UserDetailsService
+ * Loads user authentication details from database for login and authorization
+ * Converts application User entities to Spring Security UserDetails objects
+ */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UserRepository userRepository;
+  // Constants for user details configuration
+  private static final String ROLE_PREFIX = "ROLE_";
+  private static final String USER_NOT_FOUND_MSG = "User not found with email: ";
 
-    // Load user from database using email
-    @Override
-    public UserDetails loadUserByUsername(String email)
-            throws UsernameNotFoundException {
+  private final UserRepository userRepository;
 
-        // Fetch user from DB
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found: " + email));
+  /**
+   * Loads user authentication details from database by email
+   * Called by Spring Security during login and authentication
+   * Converts application User to Spring Security UserDetails
+   *
+   * @param emailAddress the user's email (used as username in authentication)
+   * @return UserDetails object with credentials and authorities
+   * @throws UsernameNotFoundException if user with email not found in database
+   */
+  @Override
+  public UserDetails loadUserByUsername(String emailAddress)
+      throws UsernameNotFoundException {
 
-        // Convert to Spring Security User object
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),           // username
-                user.getPassword(),        // encoded password
-                List.of(
-                        new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
-                ) // user roles
-        );
-    }
+    log.debug("Loading user details for email: {}", emailAddress);
+
+    // Retrieve user from database by email address
+    var appUser = userRepository.findByEmail(emailAddress)
+        .orElseThrow(() -> {
+          log.warn("User not found with email: {}", emailAddress);
+          return new UsernameNotFoundException(USER_NOT_FOUND_MSG + emailAddress);
+        });
+
+    // Convert application user role to Spring Security granted authority
+    var userAuthorities = List.of(
+        new SimpleGrantedAuthority(ROLE_PREFIX + appUser.getRole().name())
+    );
+
+    log.debug("User details loaded successfully for: {} with role: {}",
+        emailAddress, appUser.getRole().name());
+
+    // Build Spring Security User with email, password, and authorities
+    return User.builder()
+        .username(appUser.getEmail())
+        .password(appUser.getPassword())
+        .authorities(userAuthorities)
+        .accountExpired(false)
+        .accountLocked(false)
+        .credentialsExpired(false)
+        .disabled(false)
+        .build();
+  }
 }
