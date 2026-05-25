@@ -17,63 +17,61 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    // Utility class for JWT operations
-    private final JwtUtil jwtUtil;
+  private final JwtUtil jwtUtil;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+  private String normalizeRole(String roleValue) {
+    if (roleValue == null || roleValue.isBlank()) {
+      return "CUSTOMER";
+    }
+    if (roleValue.startsWith("ROLE_")) {
+      return roleValue.substring(5);
+    }
+    return roleValue.toUpperCase();
+  }
 
-        String token = resolveToken(request);
-
-        log.debug("=== JWT Filter === {} {} | Token present: {}",
-                request.getMethod(), request.getRequestURI(), token != null);
-
-        if (token != null && jwtUtil.isTokenValid(token)) {
-            String email = jwtUtil.extractEmail(token);
-            String role = normalizeRole(jwtUtil.extractRole(token));
-
-            log.debug("=== JWT Filter === Token valid | email={} | role={}",
-                    email, role);
-
-            var auth = new UsernamePasswordAuthenticationToken(
-                    email,
-                    null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
-            );
-
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        } else if (token != null) {
-            log.warn("=== JWT Filter === Token is INVALID or EXPIRED");
-        }
-
-        filterChain.doFilter(request, response);
+  private String resolveToken(HttpServletRequest httpRequest) {
+    String bearerHeader = httpRequest.getHeader("Authorization");
+    if (bearerHeader != null && bearerHeader.startsWith("Bearer ")) {
+      return bearerHeader.substring(7).trim();
     }
 
-    private String resolveToken(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7).trim();
-        }
-
-        String legacyToken = request.getHeader("token");
-        if (legacyToken != null && !legacyToken.isBlank()) {
-            return legacyToken.trim();
-        }
-
-        return null;
+    String customToken = httpRequest.getHeader("token");
+    if (customToken != null && !customToken.isBlank()) {
+      return customToken.trim();
     }
 
-    private String normalizeRole(String role) {
-        if (role == null || role.isBlank()) {
-            return "CUSTOMER";
-        }
-        if (role.startsWith("ROLE_")) {
-            return role.substring(5);
-        }
-        return role.toUpperCase();
+    return null;
+  }
+
+  @Override
+  protected void doFilterInternal(HttpServletRequest request,
+                                  HttpServletResponse response,
+                                  FilterChain filterChain)
+      throws ServletException, IOException {
+
+    String jwtToken = resolveToken(request);
+
+    log.debug("JWT Filter - Method: {} URI: {} Token: {}",
+        request.getMethod(), request.getRequestURI(), jwtToken != null);
+
+    if (jwtToken != null && jwtUtil.isTokenValid(jwtToken)) {
+      String userEmail = jwtUtil.extractEmail(jwtToken);
+      String userRole = normalizeRole(jwtUtil.extractRole(jwtToken));
+
+      log.debug("Valid token for email: {} with role: {}", userEmail, userRole);
+
+      var authentication = new UsernamePasswordAuthenticationToken(
+          userEmail,
+          null,
+          List.of(new SimpleGrantedAuthority("ROLE_" + userRole))
+      );
+
+      SecurityContextHolder.getContext().setAuthentication(authentication);
+    } else if (jwtToken != null) {
+      log.warn("Invalid or expired JWT token received");
     }
+
+    filterChain.doFilter(request, response);
+  }
 
 }
