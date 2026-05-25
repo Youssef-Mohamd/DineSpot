@@ -7,113 +7,145 @@ import java.security.Key;
 import java.util.Date;
 
 /**
- * JWT Utility class for token generation, validation, and claims extraction
- * Uses HS256 algorithm (HMAC SHA-256) for token signing
- * Tokens expire after 24 hours
+ * JWT Utility service for managing JSON Web Tokens
+ * Handles token generation, validation, and claims extraction
+ * Token Algorithm: HS256 (HMAC SHA-256)
+ * Token Lifespan: 24 hours
  */
 @Component
 public class JwtUtil {
 
-  // JWT Configuration Constants
-  private static final String SECRET_KEY = "restaurant_reservation_secret_key_2025_very_long_string";
-  private static final long TOKEN_EXPIRATION_MS = 86400000; // 24 hours in milliseconds
-  private static final String ROLE_CLAIM_NAME = "role";
+  // ============= TOKEN CONFIGURATION =============
+  private static final String JWT_SECRET = "restaurant_reservation_secret_key_2025_very_long_string";
+  private static final long EXPIRATION_TIME_MS = 86400000; // 24 hours
+  private static final String ROLE = "role";
 
+  // ============= KEY GENERATION =============
   /**
-   * Generates a signing key from the secret string
-   * Uses HMAC SHA-256 algorithm for secure token signing
-   *
-   * @return cryptographic Key for signing JWTs
+   * Creates cryptographic signing key from secret string
+   * Algorithm: HMAC SHA-256
+   * Used for signing and verifying JWT tokens
    */
-  private Key generateSigningKey() {
-    return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+  private Key createSigningKey() {
+    byte[] secretBytes = JWT_SECRET.getBytes();
+    return Keys.hmacShaKeyFor(secretBytes);
   }
 
+  // ============= CLAIM EXTRACTION =============
   /**
-   * Parses and validates JWT token, extracting claims from the payload
-   * Verifies token signature before returning claims
+   * Parses and extracts claims from JWT token
+   * Validates signature during parsing process
    *
-   * @param jwtToken the JWT token string
-   * @return Claims object containing token payload data
-   * @throws JwtException if token is invalid or signature verification fails
+   * @param token JWT token string
+   * @return Claims from token payload
+   * @throws JwtException if token validation fails
    */
-  private Claims extractClaimsFromToken(String jwtToken) {
+  private Claims parseTokenToClaims(String token) {
     try {
-      return Jwts.parserBuilder()
-          .setSigningKey(generateSigningKey())
-          .build()
-          .parseClaimsJws(jwtToken)
+      JwtParser tokenParser = Jwts.parserBuilder()
+          .setSigningKey(createSigningKey())
+          .build();
+
+      return tokenParser
+          .parseClaimsJws(token)
           .getBody();
-    } catch (ExpiredJwtException e) {
-      throw new JwtException("Token has expired", e);
-    } catch (MalformedJwtException e) {
-      throw new JwtException("Malformed JWT token", e);
-    } catch (SignatureException e) {
-      throw new JwtException("JWT signature verification failed", e);
+    } catch (ExpiredJwtException expiredException) {
+      throw new JwtException("JWT token has expired", expiredException);
+    } catch (MalformedJwtException malformedException) {
+      throw new JwtException("JWT token is malformed or invalid format", malformedException);
+    } catch (SignatureException signatureException) {
+      throw new JwtException("JWT signature validation failed", signatureException);
     }
   }
 
   /**
-   * Extracts the email (subject) claim from a valid JWT token
+   * Extracts user email (subject claim) from token
    *
-   * @param jwtToken the JWT token string
-   * @return the user's email address
+   * @param token JWT token string
+   * @return email address stored as subject
    */
-  public String extractEmail(String jwtToken) {
-    return extractClaimsFromToken(jwtToken).getSubject();
+  public String extractUserEmail(String token) {
+    Claims claims = parseTokenToClaims(token);
+    return claims.getSubject();
   }
 
   /**
-   * Extracts the role claim from a valid JWT token
-   * Role is stored as a custom claim in the token payload
+   * Extracts user role from custom claim in token
    *
-   * @param jwtToken the JWT token string
-   * @return the user's role
+   * @param token JWT token string
+   * @return user role value
    */
-  public String extractRole(String jwtToken) {
-    return extractClaimsFromToken(jwtToken).get(ROLE_CLAIM_NAME, String.class);
+  public String extractUserRole(String token) {
+    Claims claims = parseTokenToClaims(token);
+    return claims.get(ROLE, String.class);
   }
 
+  // ============= TOKEN GENERATION =============
   /**
-   * Validates JWT token signature and expiration status
-   * Returns false if token is invalid, expired, or malformed
+   * Creates and signs a new JWT token for user
+   * Embeds email as subject and role as custom claim
+   * Automatically timestamps creation and expiration
    *
-   * @param jwtToken the JWT token string to validate
-   * @return true if token is valid and not expired, false otherwise
-   */
-  public boolean isTokenValid(String jwtToken) {
-    try {
-      Claims tokenClaims = extractClaimsFromToken(jwtToken);
-      Date expirationDate = tokenClaims.getExpiration();
-      
-      // Check if expiration date is in the future
-      boolean isNotExpired = expirationDate != null && expirationDate.after(new Date());
-      
-      return isNotExpired;
-    } catch (JwtException | IllegalArgumentException e) {
-      return false; // Token is invalid or cannot be parsed
-    }
-  }
-
-  /**
-   * Generates a new JWT token with user credentials
-   * Token includes email as subject and role as custom claim
-   * Automatically sets issued-at and expiration times
-   *
-   * @param userEmail the user's email address (used as token subject)
-   * @param userRole the user's role/authority level
+   * @param email user's email (becomes token subject/principal)
+   * @param role user's role/authority
    * @return signed JWT token string
    */
-  public String generateToken(String userEmail, String userRole) {
-    Date now = new Date();
-    Date expirationDate = new Date(now.getTime() + TOKEN_EXPIRATION_MS);
+  public String createToken(String email, String role) {
+    Date issuedAtTime = new Date();
+    Date expiresAtTime = calculateTokenExpirationTime(issuedAtTime);
 
-    return Jwts.builder()
-        .setSubject(userEmail)                    // Principal (user identity)
-        .claim(ROLE_CLAIM_NAME, userRole)         // Custom role claim
-        .setIssuedAt(now)                         // Token creation timestamp
-        .setExpiration(expirationDate)            // Token expiration timestamp
-        .signWith(generateSigningKey())           // Sign with secret key (HS256)
-        .compact();                               // Serialize to JWT string
+    // Build JWT with JJWT library
+    String jwtString = Jwts.builder()
+        .setSubject(email)                              // User identity
+        .claim(ROLE, role)                              // User authority
+        .setIssuedAt(issuedAtTime)                      // Creation time
+        .setExpiration(expiresAtTime)                   // Expiration time
+        .signWith(createSigningKey())                   // Sign with secret (HS256)
+        .compact();                                     // Convert to string
+
+    return jwtString;
+  }
+
+  /**
+   * Calculates expiration timestamp for token
+   * Adds TOKEN_EXPIRATION_MS milliseconds to issued time
+   *
+   * @param issuedTime when token was created
+   * @return expiration date/time
+   */
+  private Date calculateTokenExpirationTime(Date issuedTime) {
+    long expirationTimestamp = issuedTime.getTime() + EXPIRATION_TIME_MS;
+    return new Date(expirationTimestamp);
+  }
+
+  // ============= TOKEN VALIDATION =============
+  /**
+   * Validates JWT token - checks signature and expiration
+   * Returns false for any validation failure
+   *
+   * @param token JWT token to validate
+   * @return true if valid and not expired, false otherwise
+   */
+  public boolean validateToken(String token) {
+    try {
+      // Parse and extract claims (validates signature)
+      Claims tokenPayload = parseTokenToClaims(token);
+
+      // Check expiration time
+      Date expiryDate = tokenPayload.getExpiration();
+      Date currentTime = new Date();
+
+      if (expiryDate == null) {
+        return false; // Token has no expiration date
+      }
+
+      // Token is valid if expiration is in the future
+      return expiryDate.after(currentTime);
+
+    } catch (JwtException jwtValidationError) {
+      return false; // Invalid signature, malformed, or expired
+    } catch (IllegalArgumentException illegalArgument) {
+      return false; // Null or empty token
+    }
   }
 }
