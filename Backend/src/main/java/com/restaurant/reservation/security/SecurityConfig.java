@@ -22,92 +22,70 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    // Inject JWT filter
-    private final JwtFilter jwtFilter;
+  private final JwtFilter jwtFilter;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                // Enable CORS configuration
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 
-                // Disable CSRF (not needed for stateless APIs)
-                .csrf(csrf -> csrf.disable())
+  @Bean
+  public AuthenticationManager authenticationManager(
+      AuthenticationConfiguration authConfig) throws Exception {
+    return authConfig.getAuthenticationManager();
+  }
 
-                // Make session stateless (because we use JWT)
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(csrf -> csrf.disable())
+        .sessionManagement(session ->
+            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-                // Authorization rules
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/restaurants/*/image/test").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/refresh-token").authenticated()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/restaurants/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/restaurants/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/restaurants/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/restaurants/**").hasRole("ADMIN")
-                        .requestMatchers("/api/availability/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
+    http.authorizeHttpRequests(auth -> auth
+        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+        .requestMatchers(HttpMethod.POST, "/api/restaurants/*/image/test").permitAll()
+        .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
+        .requestMatchers(HttpMethod.POST, "/api/auth/refresh-token").authenticated()
+        .requestMatchers("/api/auth/**").permitAll()
+        .requestMatchers("/uploads/**").permitAll()
+        .requestMatchers(HttpMethod.GET, "/api/restaurants/**").permitAll()
+        .requestMatchers(HttpMethod.POST, "/api/restaurants/**").hasRole("ADMIN")
+        .requestMatchers(HttpMethod.PUT, "/api/restaurants/**").hasRole("ADMIN")
+        .requestMatchers(HttpMethod.DELETE, "/api/restaurants/**").hasRole("ADMIN")
+        .requestMatchers("/api/availability/**").permitAll()
+        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+        .anyRequest().authenticated()
+    );
 
-                )
+    http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-                // Add JWT filter before default authentication filter
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    return http.build();
+  }
 
-        return http.build();
-    }
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration corsConfig = new CorsConfiguration();
 
-    // ================= CORS CONFIG =================
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    corsConfig.setAllowCredentials(true);
 
-        CorsConfiguration config = new CorsConfiguration();
+    List<String> allowedOrigins = List.of(
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+        "http://192.168.1.11:4200",
+        "http://192.168.1.11:8081",
+        "http://192.168.1.*"
+    );
+    corsConfig.setAllowedOriginPatterns(allowedOrigins);
 
-        // سماح بتبادل ملفات تعريف الارتباط والـ Credentials
-        config.setAllowCredentials(true);
+    corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    corsConfig.setAllowedHeaders(List.of("*"));
+    corsConfig.setExposedHeaders(List.of("token"));
 
-        // إضافة الـ IP بتاعك والـ Pattern للشبكة المحلية هنا
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:4200",
-                "http://127.0.0.1:4200",
-                "http://192.168.1.11:4200",
-                "http://192.168.1.11:8081",
-                "http://192.168.1.*"
-        ));
+    UrlBasedCorsConfigurationSource corsSource = new UrlBasedCorsConfigurationSource();
+    corsSource.registerCorsConfiguration("/**", corsConfig);
 
-        config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"
-        ));
-
-        // السماح بجميع الـ Headers القياسية
-        config.setAllowedHeaders(List.of("*"));
-
-        // إظهار والسماح بالـ Headers المخصصة اللي الأنجولار بيبعتها صراحة
-        config.setExposedHeaders(List.of("token"));
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
-        source.registerCorsConfiguration("/**", config);
-
-        return source;
-    }
-
-    // ================= PASSWORD ENCODER =================
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    // ================= AUTH MANAGER =================
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+    return corsSource;
+  }
 }
